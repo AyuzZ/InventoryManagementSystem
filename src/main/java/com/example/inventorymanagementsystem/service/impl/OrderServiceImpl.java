@@ -1,32 +1,52 @@
 package com.example.inventorymanagementsystem.service.impl;
 
 import com.example.inventorymanagementsystem.entity.Order;
+import com.example.inventorymanagementsystem.entity.OrderInfo;
+import com.example.inventorymanagementsystem.exceptions.OrderNotFoundException;
+import com.example.inventorymanagementsystem.repository.OrderInfoRepository;
 import com.example.inventorymanagementsystem.repository.OrderRepository;
 import com.example.inventorymanagementsystem.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private OrderRepository orderRepository;
+    @Autowired
+    private OrderInfoRepository orderInfoRepository;
 
     @Override
-    public Order createOrder(Order order) {
+    @Transactional
+    public Order createOrder(Order order, List<OrderInfo> orderInfoList) {
 
-        return null;
+        Order createdOrder = orderRepository.save(order);
+
+        for (OrderInfo orderInfo : orderInfoList){
+            orderInfo.setOrder(createdOrder);
+            orderInfoRepository.save(orderInfo);
+        }
+
+        return createdOrder;
     }
 
     @Override
     public List<Order> getOrders() {
-        return List.of();
+        return orderRepository.findAll();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Order getOrderById(int id) {
-        return null;
+        Optional<Order> optionalOrder = orderRepository.findById(id);
+        if(optionalOrder.isPresent()){
+            return optionalOrder.get();
+        }
+        throw new OrderNotFoundException("Order Not Found.");
     }
 }

@@ -1,6 +1,7 @@
 package com.example.inventorymanagementsystem.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -22,6 +23,6 @@ public class Order {
     private User user;
 
     @OneToMany(mappedBy = "order", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JsonIgnore
+    @JsonManagedReference
     private List<OrderInfo> orderInfoList = new ArrayList<>();
 }

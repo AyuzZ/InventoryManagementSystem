@@ -41,6 +41,14 @@ public class UserServiceImpl implements UserService{
         return userRepository.findAll();
     }
 
+    public Integer getUserId(String username){
+        Optional<Integer> optionalUserId = userRepository.getUserId(username);
+        if(optionalUserId.isPresent()){
+            return optionalUserId.get();
+        }
+        throw new UsernameNotFoundException("User Not Found.");
+    }
+
     @Override
     public User updateUser(User user) {
         return userRepository.save(user);

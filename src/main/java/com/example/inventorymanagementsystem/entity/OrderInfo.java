@@ -1,5 +1,6 @@
 package com.example.inventorymanagementsystem.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -13,11 +14,12 @@ public class OrderInfo {
     private Integer orderQuantity;
     private Double lineTotal;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "oid")
+    @JsonBackReference
     private Order order;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pid")
     private Product product;
 }
