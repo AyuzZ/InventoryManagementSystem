@@ -13,4 +13,6 @@ public interface OrderService {
 
     Order getOrderById(int id);
 
+    List<Order> getOrderByUserId(int userId);
+
 }

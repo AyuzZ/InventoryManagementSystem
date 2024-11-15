@@ -1,5 +1,7 @@
 package com.example.inventorymanagementsystem.controller;
 
+import com.example.inventorymanagementsystem.dto.UpdateUserDTO;
+import com.example.inventorymanagementsystem.dto.UserResponseDTO;
 import com.example.inventorymanagementsystem.exceptions.RoleNotFoundException;
 import com.example.inventorymanagementsystem.exceptions.UserExistsException;
 import com.example.inventorymanagementsystem.entity.Role;
@@ -58,14 +60,8 @@ public class UserController {
 
     @PostMapping("/signup/")
     public ResponseEntity<?> createUser(@RequestBody User user){
-        //If the user exists or not is checked in UserServiceImpl
 
-        //Encrypting the password
-        BCryptPasswordEncoder pwEncoder = new BCryptPasswordEncoder();
-        String encryptedPassword = pwEncoder.encode(user.getPassword());
-        user.setPassword(encryptedPassword);
-
-        //Checking if role USER exists
+        //Checking if role USER has been created or not.
         Role userRole;
         try {
             userRole = roleService.getRoleByName("USER");
@@ -73,11 +69,9 @@ public class UserController {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
 
-        //Adding the Role to user's Role
-        user.getRoles().add(userRole);
-
+        //If the user exists or not is checked in UserServiceImpl
         try{
-            User createdUser = userService.createUser(user);
+            User createdUser = userService.createUser(user, userRole);
         }catch (UserExistsException e){
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
@@ -113,28 +107,30 @@ public class UserController {
         try{
             //Getting the user from DB
             User user = userService.getUser(username);
-            return new ResponseEntity<>(user, HttpStatus.OK);
+            UserResponseDTO userResponseDTO = UserResponseDTO.builder()
+                    .uid(user.getUid())
+                    .username(user.getUsername())
+                    .firstName(user.getFirstName())
+                    .lastName(user.getLastName())
+                    .roles(user.getRoles())
+                    .build();
+            return new ResponseEntity<>(userResponseDTO, HttpStatus.OK);
         }catch (UsernameNotFoundException e){
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
 
     @PutMapping("/user/")
-    public ResponseEntity<?> updateUser(@RequestBody User user){
+    public ResponseEntity<?> updateUser(@RequestBody UpdateUserDTO updateUserDTO){
         //Getting username of logged-in user from security context holder
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
-
-        //Getting the existing details of the user from the DB
-        User existingUser = userService.getUser(username);
-
-        //Updating First and Last Name with the newly provided one
-        existingUser.setFirstName(user.getFirstName());
-        existingUser.setLastName(user.getLastName());
+        //Setting the username in the DTO
+        updateUserDTO.setUsername(username);
 
         //Calling update method
         try{
-            User updatedUser = userService.updateUser(existingUser);
+            User updatedUser = userService.updateUser(updateUserDTO);
         }catch (Exception e){
             return new ResponseEntity<>("User Update Failed. Because of: " + e.getMessage(), HttpStatus.BAD_REQUEST);
         }
@@ -148,7 +144,18 @@ public class UserController {
     public ResponseEntity<?> getAllUsers(){
         try {
             List<User> userList = userService.getUsers();
-            return new ResponseEntity<>(userList, HttpStatus.OK);
+            List<UserResponseDTO> userResponseDTOList = new ArrayList<>();
+            for (User user : userList){
+                UserResponseDTO userResponseDTO = UserResponseDTO.builder()
+                        .uid(user.getUid())
+                        .username(user.getUsername())
+                        .firstName(user.getFirstName())
+                        .lastName(user.getLastName())
+                        .roles(user.getRoles())
+                        .build();
+                userResponseDTOList.add(userResponseDTO);
+            }
+            return new ResponseEntity<>(userResponseDTOList, HttpStatus.OK);
         }catch (Exception e){
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
@@ -157,29 +164,28 @@ public class UserController {
 
 // Dont delete user as order placed by the users will also have to be deleted -
 
-//    @DeleteMapping("/delete/{username}")
-//    public ResponseEntity<?> deleteUser(@PathVariable String username){
-//        User user;
-//
-//        //Checking if user exists.
-//        try{
-//            user = userService.getUser(username);
-//        }catch (UsernameNotFoundException e){
-//            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-//        }
-//
-//        //Clearing user from the user_roles table too.
+    @DeleteMapping("/delete/{username}")
+    public ResponseEntity<?> deleteUser(@PathVariable String username){
+        User user;
+        //Checking if user exists. Retrieving it if it exists.
+        try{
+            user = userService.getUser(username);
+        }catch (UsernameNotFoundException e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+
+        //Clearing user from the user_roles table too.
 //        List<Role> roles = user.getRoles();
 //        for (Role role : roles) {
 //            role.getUsers().clear();
 //        }
-//
-//        //Deleting the user
-//        try {
-//            userService.deleteUser(username);
-//            return new ResponseEntity<>("User Deleted.", HttpStatus.OK);
-//        }catch (Exception e){
-//            return new ResponseEntity<>("User Could Not Be Deleted. Exception: " + e.getMessage(), HttpStatus.BAD_REQUEST);
-//        }
-//    }
+
+        //Deleting the user
+        try {
+            User deletedUser = userService.deleteUser(user);
+            return new ResponseEntity<>("User Deleted.", HttpStatus.OK);
+        }catch (Exception e){
+            return new ResponseEntity<>("User Could Not Be Deleted. Exception: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
 }

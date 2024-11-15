@@ -43,7 +43,6 @@ public class OrderController {
         order.setOrderDate(new Date());
         order.setOrderTotal(0.0);
 
-        //Only one orderinfo for now
         List<OrderInfo> orderInfoList = new ArrayList<>();
 
         for (OrderRequestDTO orderRequestDTO : orderRequests){
@@ -118,11 +117,12 @@ public class OrderController {
         return null;
     }
 
-    @GetMapping("{id}")
-    public ResponseEntity<?> getOrder(@PathVariable int id){
+    //For admin (for now) - for users - only allow access to order id belonging to that user
+    @GetMapping("{orderId}")
+    public ResponseEntity<?> getOrderById(@PathVariable int orderId){
         Order order;
         try {
-            order = orderService.getOrderById(id);
+            order = orderService.getOrderById(orderId);
         }catch (OrderNotFoundException e){
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
@@ -150,6 +150,90 @@ public class OrderController {
         orderResponseDTO.setOrderInfoDisplayList(orderInfoDisplayList);
 
         return new ResponseEntity<>(orderResponseDTO, HttpStatus.OK);
+    }
+
+    //For admins only
+    @GetMapping("{userId}")
+    public ResponseEntity<?> getOrderByUserId(@PathVariable int userId){
+
+        List<Order> orderList;
+        try {
+            orderList = orderService.getOrderByUserId(userId);
+        }catch (OrderNotFoundException e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+
+        List<OrderResponseDTO> orderResponseDTOList = new ArrayList<>();
+        for (Order order : orderList){
+            OrderResponseDTO orderResponseDTO = OrderResponseDTO.builder()
+                    .oid(order.getOid())
+                    .uid(order.getUser().getUid())
+                    .username(order.getUser().getUsername())
+                    .orderDate(order.getOrderDate())
+                    .orderTotal(order.getOrderTotal())
+                    .build();
+
+            List<OrderInfoDisplay> orderInfoDisplayList = new ArrayList<>();
+            for (OrderInfo orderInfo : order.getOrderInfoList()){
+                OrderInfoDisplay orderInfoDisplay = OrderInfoDisplay.builder()
+                        .pid(orderInfo.getProduct().getPid())
+                        .pName(orderInfo.getProduct().getName())
+                        .unitPrice(orderInfo.getProduct().getUnitPrice())
+                        .orderQuantity(orderInfo.getOrderQuantity())
+                        .lineTotal(orderInfo.getLineTotal())
+                        .build();
+                orderInfoDisplayList.add(orderInfoDisplay);
+            }
+
+            orderResponseDTO.setOrderInfoDisplayList(orderInfoDisplayList);
+            orderResponseDTOList.add(orderResponseDTO);
+        }
+        return new ResponseEntity<>(orderResponseDTOList, HttpStatus.OK);
+    }
+
+    //to view your own orders
+    @GetMapping("")
+    public ResponseEntity<?> getOrderForLoggedInUser(){
+
+        //Getting username of logged-in user from security context holder
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        //Getting user id
+        Integer userId = userService.getUserId(username);
+
+        List<Order> orderList;
+        try {
+            orderList = orderService.getOrderByUserId(userId);
+        }catch (OrderNotFoundException e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+
+        List<OrderResponseDTO> orderResponseDTOList = new ArrayList<>();
+        for (Order order : orderList){
+            OrderResponseDTO orderResponseDTO = OrderResponseDTO.builder()
+                    .oid(order.getOid())
+                    .uid(order.getUser().getUid())
+                    .username(order.getUser().getUsername())
+                    .orderDate(order.getOrderDate())
+                    .orderTotal(order.getOrderTotal())
+                    .build();
+
+            List<OrderInfoDisplay> orderInfoDisplayList = new ArrayList<>();
+            for (OrderInfo orderInfo : order.getOrderInfoList()){
+                OrderInfoDisplay orderInfoDisplay = OrderInfoDisplay.builder()
+                        .pid(orderInfo.getProduct().getPid())
+                        .pName(orderInfo.getProduct().getName())
+                        .unitPrice(orderInfo.getProduct().getUnitPrice())
+                        .orderQuantity(orderInfo.getOrderQuantity())
+                        .lineTotal(orderInfo.getLineTotal())
+                        .build();
+                orderInfoDisplayList.add(orderInfoDisplay);
+            }
+
+            orderResponseDTO.setOrderInfoDisplayList(orderInfoDisplayList);
+            orderResponseDTOList.add(orderResponseDTO);
+        }
+        return new ResponseEntity<>(orderResponseDTOList, HttpStatus.OK);
     }
 
 }

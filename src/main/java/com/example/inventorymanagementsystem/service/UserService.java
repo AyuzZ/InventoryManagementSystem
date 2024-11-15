@@ -1,12 +1,15 @@
 package com.example.inventorymanagementsystem.service;
 
+import com.example.inventorymanagementsystem.dto.UpdateUserDTO;
+import com.example.inventorymanagementsystem.dto.UserResponseDTO;
+import com.example.inventorymanagementsystem.entity.Role;
 import com.example.inventorymanagementsystem.entity.User;
 
 import java.util.List;
 
 public interface UserService {
 
-    User createUser(User user);
+    User createUser(User user, Role userRole);
 
     User getUser(String username);
 
@@ -14,8 +17,8 @@ public interface UserService {
 
     List<User> getUsers();
 
-    User updateUser(User user);
+    User updateUser(UpdateUserDTO updateUserDTO);
 
-    void deleteUser(String username);
+    User deleteUser(User user);
 
 }

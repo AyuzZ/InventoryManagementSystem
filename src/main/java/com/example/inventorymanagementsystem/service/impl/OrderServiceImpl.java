@@ -24,14 +24,11 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public Order createOrder(Order order, List<OrderInfo> orderInfoList) {
-
         Order createdOrder = orderRepository.save(order);
-
         for (OrderInfo orderInfo : orderInfoList){
             orderInfo.setOrder(createdOrder);
             orderInfoRepository.save(orderInfo);
         }
-
         return createdOrder;
     }
 
@@ -49,4 +46,15 @@ public class OrderServiceImpl implements OrderService {
         }
         throw new OrderNotFoundException("Order Not Found.");
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Order> getOrderByUserId(int userId) {
+        List<Order> orderList = orderRepository.getOrderByUid(userId);
+        if (orderList != null){
+            return orderList;
+        }
+        throw new OrderNotFoundException("User hasn't created any orders.");
+    }
+
 }
