@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/vendor/")
@@ -49,23 +50,22 @@ public class VendorController {
         try {
             Vendor vendor = vendorService.getVendorById(id);
 
+            List<VendorToProductResponseDTO> vendorToProductResponseDTOList = vendor.getVendorProductList().stream()
+                    .map(vendorProduct -> VendorToProductResponseDTO.builder()
+                            .vpId(vendorProduct.getVpId())
+                            .stockQuantity(vendorProduct.getStockQuantity())
+                            .unitPrice(vendorProduct.getUnitPrice())
+                            .productId(vendorProduct.getProduct().getPid())
+                            .productName(vendorProduct.getProduct().getName())
+                            .build())
+                    .collect(Collectors.toList());
+
             VendorResponseDTO vendorResponseDTO = VendorResponseDTO.builder()
                     .vid(vendor.getVid())
                     .name(vendor.getName())
                     .contact(vendor.getContact())
+                    .vendorToProductResponseDTOList(vendorToProductResponseDTOList)
                     .build();
-            List<VendorToProductResponseDTO> vendorToProductResponseDTOList = new ArrayList<>();
-            for (VendorProduct vendorProduct : vendor.getVendorProductList()){
-                VendorToProductResponseDTO vendorToProductResponseDTO = VendorToProductResponseDTO.builder()
-                        .vpId(vendorProduct.getVpId())
-                        .stockQuantity(vendorProduct.getStockQuantity())
-                        .unitPrice(vendorProduct.getUnitPrice())
-                        .productId(vendorProduct.getProduct().getPid())
-                        .productName(vendorProduct.getProduct().getName())
-                        .build();
-                vendorToProductResponseDTOList.add(vendorToProductResponseDTO);
-            }
-            vendorResponseDTO.setVendorToProductResponseDTOList(vendorToProductResponseDTOList);
 
             return new ResponseEntity<>(vendorResponseDTO, HttpStatus.OK);
         } catch (VendorNotFoundException e) {
@@ -78,29 +78,28 @@ public class VendorController {
         try {
             List<Vendor> vendorList = vendorService.getVendors();
 
-            List<VendorResponseDTO> vendorResponseDTOList = new ArrayList<>();
+            List<VendorResponseDTO> vendorResponseDTOList = vendorList.stream()
+                    .map(vendor -> {
+                        // Transform VendorProduct list to VendorToProductResponseDTO list
+                        List<VendorToProductResponseDTO> vendorToProductResponseDTOList = vendor.getVendorProductList().stream()
+                                .map(vendorProduct -> VendorToProductResponseDTO.builder()
+                                        .vpId(vendorProduct.getVpId())
+                                        .stockQuantity(vendorProduct.getStockQuantity())
+                                        .unitPrice(vendorProduct.getUnitPrice())
+                                        .productId(vendorProduct.getProduct().getPid())
+                                        .productName(vendorProduct.getProduct().getName())
+                                        .build())
+                                .collect(Collectors.toList());
 
-            for (Vendor vendor : vendorList){
-                VendorResponseDTO vendorResponseDTO = VendorResponseDTO.builder()
-                        .vid(vendor.getVid())
-                        .name(vendor.getName())
-                        .contact(vendor.getContact())
-                        .build();
-                List<VendorToProductResponseDTO> vendorToProductResponseDTOList = new ArrayList<>();
-                for (VendorProduct vendorProduct : vendor.getVendorProductList()){
-                    VendorToProductResponseDTO vendorToProductResponseDTO = VendorToProductResponseDTO.builder()
-                            .vpId(vendorProduct.getVpId())
-                            .stockQuantity(vendorProduct.getStockQuantity())
-                            .unitPrice(vendorProduct.getUnitPrice())
-                            .productId(vendorProduct.getProduct().getPid())
-                            .productName(vendorProduct.getProduct().getName())
-                            .build();
-                    vendorToProductResponseDTOList.add(vendorToProductResponseDTO);
-                }
-                vendorResponseDTO.setVendorToProductResponseDTOList(vendorToProductResponseDTOList);
-
-                vendorResponseDTOList.add(vendorResponseDTO);
-            }
+                        // Build VendorResponseDTO
+                        return VendorResponseDTO.builder()
+                                .vid(vendor.getVid())
+                                .name(vendor.getName())
+                                .contact(vendor.getContact())
+                                .vendorToProductResponseDTOList(vendorToProductResponseDTOList)
+                                .build();
+                    })
+                    .collect(Collectors.toList());
 
             return new ResponseEntity<>(vendorResponseDTOList, HttpStatus.OK);
         } catch (VendorNotFoundException e) {

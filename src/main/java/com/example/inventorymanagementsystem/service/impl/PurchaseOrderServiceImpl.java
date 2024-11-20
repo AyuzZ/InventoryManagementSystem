@@ -102,14 +102,4 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         vendorProductService.saveVendorProduct(existingVendorProduct);
     }
 
-//    @Override
-//    @Transactional(readOnly = true)
-//    public List<PurchaseOrder> getOrderByUserId(int userId) {
-//        List<PurchaseOrder> purchaseOrderList = purchaseOrderRepository.getOrderByUid(userId);
-//        if (purchaseOrderList != null){
-//            return purchaseOrderList;
-//        }
-//        throw new OrderNotFoundException("User hasn't created any orders.");
-//    }
-
 }

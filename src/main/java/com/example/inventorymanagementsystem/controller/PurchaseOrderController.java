@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/order/")
@@ -102,22 +103,20 @@ public class PurchaseOrderController {
         try {
             List<PurchaseOrder> purchaseOrderList = purchaseOrderService.getOrders();
 
-            List<PurchaseOrderResponseDTO> purchaseOrderResponseDTOList = new ArrayList<>();
-            for (PurchaseOrder purchaseOrder : purchaseOrderList){
-                PurchaseOrderResponseDTO purchaseOrderResponseDTO = PurchaseOrderResponseDTO.builder()
-                        .oid(purchaseOrder.getOid())
-                        .orderDate(purchaseOrder.getOrderDate())
-                        .orderStatus(purchaseOrder.getOrderStatus())
-                        .orderQuantity(purchaseOrder.getOrderQuantity())
-                        .unitPrice(purchaseOrder.getUnitPrice())
-                        .orderTotal(purchaseOrder.getOrderTotal())
-                        .productId(purchaseOrder.getProduct().getPid())
-                        .productName(purchaseOrder.getProduct().getName())
-                        .vendorId(purchaseOrder.getVendor().getVid())
-                        .vendorName(purchaseOrder.getVendor().getName())
-                        .build();
-                purchaseOrderResponseDTOList.add(purchaseOrderResponseDTO);
-            }
+            List<PurchaseOrderResponseDTO> purchaseOrderResponseDTOList = purchaseOrderList.stream()
+                    .map(purchaseOrder -> PurchaseOrderResponseDTO.builder()
+                            .oid(purchaseOrder.getOid())
+                            .orderDate(purchaseOrder.getOrderDate())
+                            .orderStatus(purchaseOrder.getOrderStatus())
+                            .orderQuantity(purchaseOrder.getOrderQuantity())
+                            .unitPrice(purchaseOrder.getUnitPrice())
+                            .orderTotal(purchaseOrder.getOrderTotal())
+                            .productId(purchaseOrder.getProduct().getPid())
+                            .productName(purchaseOrder.getProduct().getName())
+                            .vendorId(purchaseOrder.getVendor().getVid())
+                            .vendorName(purchaseOrder.getVendor().getName())
+                            .build())
+                    .collect(Collectors.toList());
 
             return new ResponseEntity<>(purchaseOrderResponseDTOList, HttpStatus.OK);
         } catch (OrderNotFoundException e) {

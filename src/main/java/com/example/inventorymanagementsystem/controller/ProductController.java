@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/product/")
@@ -41,23 +42,24 @@ public class ProductController {
     public ResponseEntity<?> getProductById(@PathVariable int id){
         try{
             Product product = productService.getProductById(id);
+
+            List<ProductToVendorResponseDTO> productToVendorResponseDTOList = product.getVendorProductList().stream()
+                    .map(vendorProduct -> ProductToVendorResponseDTO.builder()
+                            .vpId(vendorProduct.getVpId())
+                            .stockQuantity(vendorProduct.getStockQuantity())
+                            .unitPrice(vendorProduct.getUnitPrice())
+                            .vendorId(vendorProduct.getVendor().getVid())
+                            .vendorName(vendorProduct.getVendor().getName())
+                            .build())
+                    .collect(Collectors.toList());
+
             ProductResponseDTO productResponseDTO = ProductResponseDTO.builder()
                     .pid(product.getPid())
                     .name(product.getName())
                     .description(product.getDescription())
+                    .productToVendorResponseDTOList(productToVendorResponseDTOList)
                     .build();
-            List<ProductToVendorResponseDTO> productToVendorResponseDTOList = new ArrayList<>();
-            for (VendorProduct vendorProduct : product.getVendorProductList()){
-                ProductToVendorResponseDTO productToVendorResponseDTO = ProductToVendorResponseDTO.builder()
-                        .vpId(vendorProduct.getVpId())
-                        .stockQuantity(vendorProduct.getStockQuantity())
-                        .unitPrice(vendorProduct.getUnitPrice())
-                        .vendorId(vendorProduct.getVendor().getVid())
-                        .vendorName(vendorProduct.getVendor().getName())
-                        .build();
-                productToVendorResponseDTOList.add(productToVendorResponseDTO);
-            }
-            productResponseDTO.setProductToVendorResponseDTOList(productToVendorResponseDTOList);
+
             return new ResponseEntity<>(productResponseDTO, HttpStatus.OK);
         }catch (ProductNotFoundException e){
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
@@ -69,30 +71,28 @@ public class ProductController {
         try{
             List<Product> productList = productService.getProducts();
 
-            List<ProductResponseDTO> productResponseDTOList = new ArrayList<>();
+            List<ProductResponseDTO> productResponseDTOList = productList.stream()
+                    .map(product -> {
+                        // Map VendorProduct list to ProductToVendorResponseDTO list using streams
+                        List<ProductToVendorResponseDTO> productToVendorResponseDTOList = product.getVendorProductList().stream()
+                                .map(vendorProduct -> ProductToVendorResponseDTO.builder()
+                                        .vpId(vendorProduct.getVpId())
+                                        .stockQuantity(vendorProduct.getStockQuantity())
+                                        .unitPrice(vendorProduct.getUnitPrice())
+                                        .vendorId(vendorProduct.getVendor().getVid())
+                                        .vendorName(vendorProduct.getVendor().getName())
+                                        .build())
+                                .collect(Collectors.toList());
 
-            for (Product product : productList) {
-                ProductResponseDTO productResponseDTO = ProductResponseDTO.builder()
-                        .pid(product.getPid())
-                        .name(product.getName())
-                        .description(product.getDescription())
-                        .build();
-                List<ProductToVendorResponseDTO> productToVendorResponseDTOList = new ArrayList<>();
-                for (VendorProduct vendorProduct : product.getVendorProductList()){
-                    ProductToVendorResponseDTO productToVendorResponseDTO = ProductToVendorResponseDTO.builder()
-                            .vpId(vendorProduct.getVpId())
-                            .stockQuantity(vendorProduct.getStockQuantity())
-                            .unitPrice(vendorProduct.getUnitPrice())
-                            .vendorId(vendorProduct.getVendor().getVid())
-                            .vendorName(vendorProduct.getVendor().getName())
-                            .build();
-                    productToVendorResponseDTOList.add(productToVendorResponseDTO);
-                }
-                productResponseDTO.setProductToVendorResponseDTOList(productToVendorResponseDTOList);
-
-                productResponseDTOList.add(productResponseDTO);
-            }
-
+                        // Build ProductResponseDTO
+                        return ProductResponseDTO.builder()
+                                .pid(product.getPid())
+                                .name(product.getName())
+                                .description(product.getDescription())
+                                .productToVendorResponseDTOList(productToVendorResponseDTOList)
+                                .build();
+                    })
+                    .collect(Collectors.toList());
             return new ResponseEntity<>(productResponseDTOList, HttpStatus.OK);
         }catch (ProductNotFoundException e){
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);

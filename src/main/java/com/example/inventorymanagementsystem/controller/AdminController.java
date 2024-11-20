@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/admin/")
@@ -38,17 +39,15 @@ public class AdminController {
         //Getting all users
         try {
             List<User> userList = userService.getUsers();
-            List<UserResponseDTO> userResponseDTOList = new ArrayList<>();
-            for (User user : userList){
-                UserResponseDTO userResponseDTO = UserResponseDTO.builder()
-                        .uid(user.getUid())
-                        .username(user.getUsername())
-                        .firstName(user.getFirstName())
-                        .lastName(user.getLastName())
-                        .roles(user.getRoles())
-                        .build();
-                userResponseDTOList.add(userResponseDTO);
-            }
+            List<UserResponseDTO> userResponseDTOList = userList.stream()
+                    .map(user -> UserResponseDTO.builder()
+                            .uid(user.getUid())
+                            .username(user.getUsername())
+                            .firstName(user.getFirstName())
+                            .lastName(user.getLastName())
+                            .roles(user.getRoles())
+                            .build())
+                    .collect(Collectors.toList());
             return new ResponseEntity<>(userResponseDTOList, HttpStatus.OK);
         }catch (Exception e){
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
