@@ -8,18 +8,16 @@ public interface ProductService {
 
     Product createProduct(Product product);
 
+    Product getAvailableProductById(int id);
+
     List<Product> getProducts();
 
     Product getProductById(int id);
 
-    List<Product> getProductsByName(String keyword);
-
-    List<Product> getProductsByPrice(Double price);
-
-//    List<Product> getProductsByNameAndPrice(String keyword, Double price);
+    Product getProductByName(String name);
 
     Product updateProduct(Product product);
 
-    void deleteProduct(int id);
+    Product deleteProduct(Product product);
 
 }

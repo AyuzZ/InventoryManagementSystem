@@ -22,9 +22,9 @@ public class VendorServiceImpl implements VendorService {
 
     @Override
     public Vendor createVendor(Vendor vendor) {
-        Optional<Vendor> optionalVendor = vendorRepository.findById(vendor.getVid());
+        Optional<Vendor> optionalVendor = vendorRepository.getAvailableVendorByContact(vendor.getContact());
         if(optionalVendor.isPresent()){
-            throw new VendorExistsException("Vendor Id Already Exists.");
+            throw new VendorExistsException("Vendor Already Exists.");
         }else {
             return vendorRepository.save(vendor);
         }
@@ -45,15 +45,26 @@ public class VendorServiceImpl implements VendorService {
         }
     }
 
-//    @Override
-//    public Vendor getVendorByName(String name) {
-//        Optional<Vendor> optionalVendor = vendorRepository.findByName(name);
-//        if(optionalVendor.isPresent()){
-//            return optionalVendor.get();
-//        }else {
-//            throw new VendorNotFoundException("Vendor Not Found.");
-//        }
-//    }
+    @Override
+    public Vendor getAvailableVendorById(int id){
+        Optional<Vendor> optionalVendor = vendorRepository.getAvailableVendorById(id);
+        if(optionalVendor.isPresent()){
+            return optionalVendor.get();
+        }else {
+            throw new VendorNotFoundException("The Vendor doesn't exist or The Vendor ID belongs to a Deleted Vendor.");
+        }
+    }
+
+    @Override
+    public Vendor getVendorByContact(String contact){
+        Optional<Vendor> optionalVendor = vendorRepository.getAvailableVendorByContact(contact);
+        return  optionalVendor.orElse(null);
+    }
+
+    @Override
+    public boolean vendorExists(int id) {
+        return vendorRepository.checkVendor(id) == 1;
+    }
 
     @Override
     public Vendor updateVendor(Vendor vendor) {
@@ -61,8 +72,10 @@ public class VendorServiceImpl implements VendorService {
     }
 
     @Override
-    public void deleteVendor(int id) {
-        vendorRepository.deleteById(id);
+    public Vendor deleteVendor(Vendor vendor) {
+        vendor.setContact(null);
+        vendor.setName(vendor.getName() + "_deleted");
+        return vendorRepository.save(vendor);
     }
 
 }

@@ -1,9 +1,12 @@
 package com.example.inventorymanagementsystem.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,16 +17,17 @@ import java.util.List;
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Product {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer pid;
+    @Column(unique = true)
     private String name;
     private String description;
-    private Double unitPrice;
-    private Integer stockQuantity;
-
-    @ManyToOne
-    private Vendor vendor;
 
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+//    @JsonManagedReference // Forward reference for PurchaseOrders
     @JsonIgnore
-    private List<OrderInfo> orderInfoList = new ArrayList<>();
+    private List<PurchaseOrder> purchaseOrderList = new ArrayList<>();
+
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<VendorProduct> vendorProductList = new ArrayList<>();
 }

@@ -1,10 +1,7 @@
 package com.example.inventorymanagementsystem.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.ArrayList;
@@ -15,7 +12,9 @@ import java.util.List;
 @Table(name = "roles")
 public class Role {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer rid;
+    @Column(unique = true)
     private String name;
 
     @ManyToMany(mappedBy = "roles")

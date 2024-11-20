@@ -25,26 +25,36 @@ public class SecurityConfig{
     @Autowired
     private JwtFilter jwtFilter;
 
+    private final CustomAccessDeniedHandler accessDeniedHandler;
+    private final CustomAuthenticationEntryPoint authenticationEntryPoint;
+
+    public SecurityConfig(CustomAccessDeniedHandler accessDeniedHandler, CustomAuthenticationEntryPoint authenticationEntryPoint) {
+        this.accessDeniedHandler = accessDeniedHandler;
+        this.authenticationEntryPoint = authenticationEntryPoint;
+    }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
         http
                 .authorizeHttpRequests(authorize -> authorize
-//                                .requestMatchers("", "/", "/signup/", "login/", "/user/**", "/user/").authenticated()
-//                                .requestMatchers("/admin", "/admin/", "/vendor/**", "/role/**", "/products/", "/products/", "/products" ).hasRole("ADMIN")
-//                        .requestMatchers("/user/**", "/user/**").authenticated()
-                        .anyRequest().permitAll()
+                                .requestMatchers("/signup/", "login/").permitAll()
+                                .requestMatchers("/role/**").hasRole("OWNER")
+                                .requestMatchers("/admin/**").hasRole("OWNER")
+                                .requestMatchers("/product/**").authenticated()
+                                .requestMatchers("/user/**").authenticated()
+                                .requestMatchers("/vendor/**").authenticated()
+                                .requestMatchers("/order/").authenticated()
+                                .anyRequest().authenticated()
+//                                .anyRequest().permitAll()
                 )
                 .csrf(AbstractHttpConfigurer::disable)
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling( exceptionHandling -> exceptionHandling
+                        .accessDeniedHandler(accessDeniedHandler) // Custom 403 handler
+                        .authenticationEntryPoint(authenticationEntryPoint)) // Custom 401 handler
+        ;
         return http.build();
     }
-
-//    @Autowired
-//    public void configureGlobal(AuthenticationManagerBuilder authenticationManagerBuilder) throws Exception{
-//        authenticationManagerBuilder
-//                .userDetailsService(userDetailsService)
-//                .passwordEncoder(passwordEncoder());
-//    }
 
     @Bean
     public PasswordEncoder passwordEncoder(){
@@ -56,13 +66,5 @@ public class SecurityConfig{
             throws Exception{
         return authenticationConfiguration.getAuthenticationManager();
     }
-
-//    @Bean
-//    static RoleHierarchy roleHierarchy(){
-//        return RoleHierarchyImpl.withDefaultRolePrefix()
-//                .role("ADMIN").implies("USER")
-//                .build();
-//    }
-
 
 }

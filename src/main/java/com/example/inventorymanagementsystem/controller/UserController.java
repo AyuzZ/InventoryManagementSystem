@@ -26,77 +26,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
+@RequestMapping("/user/")
 public class UserController {
 
     @Autowired
     private UserService userService;
 
-    @Autowired
-    private RoleService roleService;
-
-    @Autowired
-    private UserDetailsServiceImpl userDetailsService;
-
-    @Autowired
-    private AuthenticationManager authenticationManager;
-
-    @Autowired
-    private JwtUtil jwtUtil;
-
-    //No Auth Required
-
-//    @GetMapping({"", "/"})
-//    public ResponseEntity<?> getHome(){
-//        List<String> endpoints = new ArrayList<>();
-//        endpoints.add("Available Endpoints:");
-//        endpoints.add("/createUser/ - POST");
-//        endpoints.add("/login/ - POST");
-//        endpoints.add("/user/ - GET, PUT");
-//        endpoints.add("/admin/ - GET");
-//        endpoints.add("/delete/{username} - DELETE");
-//        endpoints.add("/role/ - GET, PUT");
-//        return new ResponseEntity<>(endpoints, HttpStatus.OK);
-//    }
-
-    @PostMapping("/signup/")
-    public ResponseEntity<?> createUser(@RequestBody User user){
-
-        //Checking if role USER has been created or not.
-        Role userRole;
-        try {
-            userRole = roleService.getRoleByName("USER");
-        }catch (RoleNotFoundException e){
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-        }
-
-        //If the user exists or not is checked in UserServiceImpl
-        try{
-            User createdUser = userService.createUser(user, userRole);
-        }catch (UserExistsException e){
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-        }
-
-        return new ResponseEntity<>("User Created. Login to view your details.", HttpStatus.CREATED);
-    }
-
-    @PostMapping("/login/")
-    public ResponseEntity<String> login(@RequestBody User user){
-        try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword())
-            );
-            UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
-            String jwt = jwtUtil.generateToken(userDetails.getUsername());
-            return new ResponseEntity<>(jwt, HttpStatus.OK);
-        }catch (Exception e){
-            return new ResponseEntity<>("Incorrect username or password.", HttpStatus.BAD_REQUEST);
-        }
-    }
-
 
     //User and Admin has Access to the following endpoints.
 
-    @GetMapping("/user/")
+    @GetMapping()
     public ResponseEntity<?> getUser(){
         //Getting username of logged-in user from security context holder
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -120,7 +59,7 @@ public class UserController {
         }
     }
 
-    @PutMapping("/user/")
+    @PutMapping()
     public ResponseEntity<?> updateUser(@RequestBody UpdateUserDTO updateUserDTO){
         //Getting username of logged-in user from security context holder
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -135,57 +74,5 @@ public class UserController {
             return new ResponseEntity<>("User Update Failed. Because of: " + e.getMessage(), HttpStatus.BAD_REQUEST);
         }
         return new ResponseEntity<>("User Updated.", HttpStatus.OK);
-    }
-
-
-    //Only Admin has access to the following endpoints.
-
-    @GetMapping({"/admin", "/admin/"})
-    public ResponseEntity<?> getAllUsers(){
-        try {
-            List<User> userList = userService.getUsers();
-            List<UserResponseDTO> userResponseDTOList = new ArrayList<>();
-            for (User user : userList){
-                UserResponseDTO userResponseDTO = UserResponseDTO.builder()
-                        .uid(user.getUid())
-                        .username(user.getUsername())
-                        .firstName(user.getFirstName())
-                        .lastName(user.getLastName())
-                        .roles(user.getRoles())
-                        .build();
-                userResponseDTOList.add(userResponseDTO);
-            }
-            return new ResponseEntity<>(userResponseDTOList, HttpStatus.OK);
-        }catch (Exception e){
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-        }
-
-    }
-
-// Dont delete user as order placed by the users will also have to be deleted -
-
-    @DeleteMapping("/delete/{username}")
-    public ResponseEntity<?> deleteUser(@PathVariable String username){
-        User user;
-        //Checking if user exists. Retrieving it if it exists.
-        try{
-            user = userService.getUser(username);
-        }catch (UsernameNotFoundException e){
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-        }
-
-        //Clearing user from the user_roles table too.
-//        List<Role> roles = user.getRoles();
-//        for (Role role : roles) {
-//            role.getUsers().clear();
-//        }
-
-        //Deleting the user
-        try {
-            User deletedUser = userService.deleteUser(user);
-            return new ResponseEntity<>("User Deleted.", HttpStatus.OK);
-        }catch (Exception e){
-            return new ResponseEntity<>("User Could Not Be Deleted. Exception: " + e.getMessage(), HttpStatus.BAD_REQUEST);
-        }
     }
 }

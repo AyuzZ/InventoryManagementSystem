@@ -1,10 +1,9 @@
 package com.example.inventorymanagementsystem.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.ArrayList;
@@ -15,11 +14,17 @@ import java.util.List;
 @Table(name = "vendors")
 public class Vendor {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer vid;
     private String name;
+    @Column(unique = true)
     private String contact;
 
-    @OneToMany(mappedBy = "vendor")
+    @OneToMany(mappedBy = "vendor", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<VendorProduct> vendorProductList = new ArrayList<>();
+
+    @OneToMany(mappedBy = "vendor", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+//    @JsonManagedReference // Forward reference for PurchaseOrders
     @JsonIgnore
-    private List<Product> products = new ArrayList<>();
+    private List<PurchaseOrder> purchaseOrderList = new ArrayList<>();
 }

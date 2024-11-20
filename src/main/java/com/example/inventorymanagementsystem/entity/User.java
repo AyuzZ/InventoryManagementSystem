@@ -12,6 +12,7 @@ import java.util.List;
 @Table(name = "users")
 public class User {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer uid;
     @Column(unique = true)
     private String username;
@@ -21,8 +22,4 @@ public class User {
 
     @ManyToMany(fetch = FetchType.EAGER)
     private List<Role> roles = new ArrayList<Role>();
-
-    @OneToMany(mappedBy = "user")
-    @JsonIgnore
-    private List<Order> orderList;
 }

@@ -1,25 +1,30 @@
 package com.example.inventorymanagementsystem.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 
+@Builder
 @Data
 @Entity
-@Table(name = "orderinfo")
-public class OrderInfo {
+@Table(name = "vendorProducts")
+@NoArgsConstructor
+@AllArgsConstructor
+public class VendorProduct {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer oiId;
-    private Integer orderQuantity;
-    private Double lineTotal;
+    private Integer vpId;
+    private Integer stockQuantity;
+    private Double unitPrice;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "oid")
-    @JsonBackReference
-    private Order order;
+    @JoinColumn(name = "vid")
+    @JsonIgnore
+    private Vendor vendor;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pid")
+    @JsonIgnore
     private Product product;
 }

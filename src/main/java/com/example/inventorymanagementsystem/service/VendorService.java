@@ -12,9 +12,13 @@ public interface VendorService {
 
     Vendor getVendorById(int id);
 
-//    Vendor getVendorByName(String name);
+    Vendor getAvailableVendorById(int id);
+
+    Vendor getVendorByContact(String contact);
+
+    boolean vendorExists(int id);
 
     Vendor updateVendor(Vendor vendor);
 
-    void deleteVendor(int id);
+    Vendor deleteVendor(Vendor vendor);
 }
