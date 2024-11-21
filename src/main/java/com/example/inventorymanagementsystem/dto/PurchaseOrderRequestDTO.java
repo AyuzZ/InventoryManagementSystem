@@ -4,8 +4,6 @@ import com.example.inventorymanagementsystem.entity.Product;
 import com.example.inventorymanagementsystem.entity.Vendor;
 import lombok.Data;
 
-import java.util.List;
-
 @Data
 public class PurchaseOrderRequestDTO {
 

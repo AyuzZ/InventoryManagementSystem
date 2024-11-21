@@ -2,28 +2,16 @@ package com.example.inventorymanagementsystem.controller;
 
 import com.example.inventorymanagementsystem.dto.UpdateUserDTO;
 import com.example.inventorymanagementsystem.dto.UserResponseDTO;
-import com.example.inventorymanagementsystem.exceptions.RoleNotFoundException;
-import com.example.inventorymanagementsystem.exceptions.UserExistsException;
-import com.example.inventorymanagementsystem.entity.Role;
 import com.example.inventorymanagementsystem.entity.User;
-import com.example.inventorymanagementsystem.service.RoleService;
 import com.example.inventorymanagementsystem.service.UserService;
-import com.example.inventorymanagementsystem.service.impl.UserDetailsServiceImpl;
-import com.example.inventorymanagementsystem.utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
 
 @RestController
 @RequestMapping("/user/")
@@ -31,9 +19,6 @@ public class UserController {
 
     @Autowired
     private UserService userService;
-
-
-    //User and Admin has Access to the following endpoints.
 
     @GetMapping()
     public ResponseEntity<?> getUser(){

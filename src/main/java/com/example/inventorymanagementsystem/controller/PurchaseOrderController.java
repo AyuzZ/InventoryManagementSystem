@@ -4,21 +4,16 @@ import com.example.inventorymanagementsystem.dto.*;
 import com.example.inventorymanagementsystem.entity.*;
 import com.example.inventorymanagementsystem.exceptions.OrderNotFoundException;
 import com.example.inventorymanagementsystem.exceptions.ProductNotFoundException;
-import com.example.inventorymanagementsystem.exceptions.VendorExistsException;
 import com.example.inventorymanagementsystem.exceptions.VendorNotFoundException;
 import com.example.inventorymanagementsystem.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -44,17 +39,21 @@ public class PurchaseOrderController {
         }
         purchaseOrderRequestDTO.setOrderStatus(orderStatus);
 
-        try {
-            purchaseOrderRequestDTO.setUnitPrice(Double.valueOf(purchaseOrderRequestDTO.getUnitPrice())); ;
-        } catch (NumberFormatException e) {
-            return new ResponseEntity<>("Unit Price Must Only Contain Numbers.", HttpStatus.BAD_REQUEST);
-        }
+        //Handled in global exception handler
+//        try {
+//            purchaseOrderRequestDTO.setUnitPrice(Double.valueOf(purchaseOrderRequestDTO.getUnitPrice())); ;
+//        } catch (NumberFormatException e) {
+//            return new ResponseEntity<>("Unit Price Must Only Contain Numbers.", HttpStatus.BAD_REQUEST);
+//        }
+//
+//        try {
+//            purchaseOrderRequestDTO.setOrderQuantity(Integer.valueOf(purchaseOrderRequestDTO.getOrderQuantity()));
+//        } catch (NumberFormatException e) {
+//            return new ResponseEntity<>("Order Quantity must be in integer.", HttpStatus.BAD_REQUEST);
+//        }
 
-        try {
-            purchaseOrderRequestDTO.setOrderQuantity(Integer.valueOf(purchaseOrderRequestDTO.getOrderQuantity()));
-        } catch (NumberFormatException e) {
-            return new ResponseEntity<>("Order Quantity must be in integer.", HttpStatus.BAD_REQUEST);
-        }
+        if (purchaseOrderRequestDTO.getUnitPrice() == 0 || purchaseOrderRequestDTO.getOrderQuantity() == 0 )
+            return new ResponseEntity<>("Unit price and order quantity can't be 0.", HttpStatus.BAD_REQUEST);
 
         try {
             Product orderedProductDB = productService.getAvailableProductById(purchaseOrderRequestDTO.getProduct().getPid());
@@ -71,7 +70,7 @@ public class PurchaseOrderController {
         }
 
         try {
-            purchaseOrderService.createOrder(purchaseOrderRequestDTO);
+            PurchaseOrder createdOrder = purchaseOrderService.createOrder(purchaseOrderRequestDTO);
         } catch (VendorNotFoundException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
@@ -149,7 +148,7 @@ public class PurchaseOrderController {
     }
 
     @PostMapping(value = "import", consumes = {"multipart/form-data"})
-    public ResponseEntity<?> importOrdersFromCSV(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<?> importOrdersFromCSV(@RequestPart("file") MultipartFile file) {
 
         if (file.isEmpty()) {
             return new ResponseEntity<>("File is empty. Please upload a valid CSV file.", HttpStatus.BAD_REQUEST);

@@ -1,13 +1,10 @@
 package com.example.inventorymanagementsystem.service.impl;
 
 import com.example.inventorymanagementsystem.dto.PurchaseOrderRequestDTO;
-import com.example.inventorymanagementsystem.dto.UpdateOrderStatusDTO;
-import com.example.inventorymanagementsystem.entity.Product;
 import com.example.inventorymanagementsystem.entity.PurchaseOrder;
 import com.example.inventorymanagementsystem.entity.VendorProduct;
 import com.example.inventorymanagementsystem.exceptions.EmptyCSVFileException;
 import com.example.inventorymanagementsystem.exceptions.OrderNotFoundException;
-import com.example.inventorymanagementsystem.exceptions.ProductExistsException;
 import com.example.inventorymanagementsystem.exceptions.PurchaseOrderExistsException;
 import com.example.inventorymanagementsystem.repository.PurchaseOrderRepository;
 import com.example.inventorymanagementsystem.service.PurchaseOrderService;
@@ -24,7 +21,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.*;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -118,8 +114,11 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
             throw new EmptyCSVFileException("CSV file is empty.");
         }
 
-        try (Reader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
-            HeaderColumnNameMappingStrategy<PurchaseOrder> strategy = new HeaderColumnNameMappingStrategy<>();
+        try (Reader reader = new BufferedReader(
+                new InputStreamReader(file.getInputStream()))) {
+
+            HeaderColumnNameMappingStrategy<PurchaseOrder> strategy =
+                    new HeaderColumnNameMappingStrategy<>();
             strategy.setType(PurchaseOrder.class);
 
             CsvToBean<PurchaseOrder> csvToBean = new CsvToBeanBuilder<PurchaseOrder>(reader)

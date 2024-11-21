@@ -1,12 +1,8 @@
 package com.example.inventorymanagementsystem.controller;
 
-import com.example.inventorymanagementsystem.dto.ProductResponseDTO;
-import com.example.inventorymanagementsystem.dto.ProductToVendorResponseDTO;
 import com.example.inventorymanagementsystem.dto.VendorResponseDTO;
 import com.example.inventorymanagementsystem.dto.VendorToProductResponseDTO;
-import com.example.inventorymanagementsystem.entity.Product;
 import com.example.inventorymanagementsystem.entity.Vendor;
-import com.example.inventorymanagementsystem.entity.VendorProduct;
 import com.example.inventorymanagementsystem.exceptions.VendorExistsException;
 import com.example.inventorymanagementsystem.exceptions.VendorNotFoundException;
 import com.example.inventorymanagementsystem.service.VendorService;
@@ -18,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 

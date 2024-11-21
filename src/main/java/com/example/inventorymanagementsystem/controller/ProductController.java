@@ -3,12 +3,10 @@ package com.example.inventorymanagementsystem.controller;
 import com.example.inventorymanagementsystem.dto.ProductResponseDTO;
 import com.example.inventorymanagementsystem.dto.ProductToVendorResponseDTO;
 import com.example.inventorymanagementsystem.entity.Product;
-import com.example.inventorymanagementsystem.entity.VendorProduct;
 import com.example.inventorymanagementsystem.exceptions.ProductExistsException;
 import com.example.inventorymanagementsystem.exceptions.ProductNotFoundException;
 import com.example.inventorymanagementsystem.service.ProductService;
 import com.example.inventorymanagementsystem.service.VendorProductService;
-import com.example.inventorymanagementsystem.service.VendorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
@@ -17,7 +15,6 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -195,7 +192,7 @@ public class ProductController {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.parseMediaType("text/csv"));
             headers.setContentDisposition(ContentDisposition.builder("attachment")
-                    .filename("products.csv")
+                    .filename("vendorProducts.csv")
                     .build());
 
             return ResponseEntity.ok()

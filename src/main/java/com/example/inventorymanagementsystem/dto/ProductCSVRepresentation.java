@@ -1,16 +1,15 @@
 package com.example.inventorymanagementsystem.dto;
 
+import com.opencsv.bean.CsvBindByName;
 import lombok.Builder;
 import lombok.Data;
 
-import java.util.List;
-
 @Data
 @Builder
-public class ProductResponseDTO {
+public class ProductCSVRepresentation {
 
-    private Integer pid;
+    @CsvBindByName(column = "Name")
     private String name;
+    @CsvBindByName(column = "Description")
     private String description;
-    private List<ProductToVendorResponseDTO> productToVendorResponseDTOList;
 }

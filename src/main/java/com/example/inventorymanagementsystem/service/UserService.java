@@ -1,7 +1,6 @@
 package com.example.inventorymanagementsystem.service;
 
 import com.example.inventorymanagementsystem.dto.UpdateUserDTO;
-import com.example.inventorymanagementsystem.dto.UserResponseDTO;
 import com.example.inventorymanagementsystem.entity.Role;
 import com.example.inventorymanagementsystem.entity.User;
 

@@ -1,6 +1,5 @@
 package com.example.inventorymanagementsystem.repository;
 
-import com.example.inventorymanagementsystem.entity.Product;
 import com.example.inventorymanagementsystem.entity.Vendor;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -11,7 +10,6 @@ import java.util.Optional;
 @Repository
 public interface VendorRepository extends JpaRepository<Vendor, Integer> {
 
-//    Optional<Vendor> findByVName(String name);
     @Query("SELECT v FROM Vendor v WHERE v.vid = ?1 AND v.name NOT LIKE '%_deleted'")
     Optional<Vendor> getAvailableVendorById(int id);
 

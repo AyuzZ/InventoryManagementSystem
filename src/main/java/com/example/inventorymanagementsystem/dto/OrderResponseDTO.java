@@ -1,6 +1,5 @@
 package com.example.inventorymanagementsystem.dto;
 
-
 import lombok.Builder;
 import lombok.Data;
 

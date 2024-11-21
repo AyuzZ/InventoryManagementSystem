@@ -1,7 +1,5 @@
 package com.example.inventorymanagementsystem.dto;
 
-import com.example.inventorymanagementsystem.entity.Product;
-import com.example.inventorymanagementsystem.entity.Vendor;
 import lombok.Builder;
 import lombok.Data;
 

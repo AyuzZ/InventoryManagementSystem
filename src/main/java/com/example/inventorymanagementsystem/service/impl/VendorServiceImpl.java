@@ -1,15 +1,10 @@
 package com.example.inventorymanagementsystem.service.impl;
 
-import com.example.inventorymanagementsystem.entity.Product;
-import com.example.inventorymanagementsystem.entity.Role;
 import com.example.inventorymanagementsystem.entity.Vendor;
 import com.example.inventorymanagementsystem.exceptions.EmptyCSVFileException;
-import com.example.inventorymanagementsystem.exceptions.ProductExistsException;
 import com.example.inventorymanagementsystem.exceptions.VendorExistsException;
 import com.example.inventorymanagementsystem.exceptions.VendorNotFoundException;
-import com.example.inventorymanagementsystem.repository.RoleRepository;
 import com.example.inventorymanagementsystem.repository.VendorRepository;
-import com.example.inventorymanagementsystem.service.RoleService;
 import com.example.inventorymanagementsystem.service.VendorService;
 import com.opencsv.CSVWriter;
 import com.opencsv.bean.CsvToBean;

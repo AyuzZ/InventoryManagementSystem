@@ -1,7 +1,7 @@
 package com.example.inventorymanagementsystem.service.impl;
 
+import com.example.inventorymanagementsystem.dto.ProductCSVRepresentation;
 import com.example.inventorymanagementsystem.entity.Product;
-import com.example.inventorymanagementsystem.entity.VendorProduct;
 import com.example.inventorymanagementsystem.exceptions.EmptyCSVFileException;
 import com.example.inventorymanagementsystem.exceptions.ProductExistsException;
 import com.example.inventorymanagementsystem.exceptions.ProductNotFoundException;
@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.*;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -88,16 +89,24 @@ public class ProductServiceImpl implements ProductService {
         }
 
         try (Reader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
-            HeaderColumnNameMappingStrategy<Product> strategy = new HeaderColumnNameMappingStrategy<>();
-            strategy.setType(Product.class);
+            HeaderColumnNameMappingStrategy<ProductCSVRepresentation> strategy = new HeaderColumnNameMappingStrategy<>();
 
-            CsvToBean<Product> csvToBean = new CsvToBeanBuilder<Product>(reader)
+            strategy.setType(ProductCSVRepresentation.class);
+
+            CsvToBean<ProductCSVRepresentation> csvToBean = new CsvToBeanBuilder<ProductCSVRepresentation>(reader)
                     .withMappingStrategy(strategy)
                     .withIgnoreLeadingWhiteSpace(true)
                     .withIgnoreEmptyLine(true)
                     .build();
 
-            List<Product> products = csvToBean.parse();
+            List<Product> products = csvToBean.parse()
+                    .stream()
+                    .map(csvLine -> Product.builder()
+                            .name(csvLine.getName())
+                            .description(csvLine.getDescription())
+                            .build()
+                    )
+                    .collect(Collectors.toList());
 
             products.forEach(product -> {
                 try {

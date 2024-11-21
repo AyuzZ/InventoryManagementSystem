@@ -7,7 +7,6 @@ import com.example.inventorymanagementsystem.exceptions.UserExistsException;
 import com.example.inventorymanagementsystem.service.RoleService;
 import com.example.inventorymanagementsystem.service.UserService;
 import com.example.inventorymanagementsystem.service.impl.UserDetailsServiceImpl;
-//import com.example.inventorymanagementsystem.utils.JwtUtil;
 import com.example.inventorymanagementsystem.utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

@@ -1,6 +1,5 @@
 package com.example.inventorymanagementsystem.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
