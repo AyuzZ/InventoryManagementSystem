@@ -8,12 +8,15 @@ import com.example.inventorymanagementsystem.exceptions.VendorExistsException;
 import com.example.inventorymanagementsystem.exceptions.VendorNotFoundException;
 import com.example.inventorymanagementsystem.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -143,6 +146,43 @@ public class PurchaseOrderController {
         purchaseOrderService.updateOrderStatus(purchaseOrder);
 
         return new ResponseEntity<>("Order Delivered! Corresponding record in Vendor_Product Table has also been updated.", HttpStatus.CREATED);
+    }
+
+    @PostMapping(value = "import", consumes = {"multipart/form-data"})
+    public ResponseEntity<?> importOrdersFromCSV(@RequestParam("file") MultipartFile file) {
+
+        if (file.isEmpty()) {
+            return new ResponseEntity<>("File is empty. Please upload a valid CSV file.", HttpStatus.BAD_REQUEST);
+        }
+
+        try {
+            purchaseOrderService.importFromCSV(file);
+            return new ResponseEntity<>("Products imported successfully.", HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error importing products: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/export")
+    public ResponseEntity<Resource> exportOrdersToCSV() {
+        try {
+            String filePath = purchaseOrderService.exportToCSV();
+            File file = new File(filePath);
+            Resource resource = new FileSystemResource(file);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.parseMediaType("text/csv"));
+            headers.setContentDisposition(ContentDisposition.builder("attachment")
+                    .filename("purchaseOrders.csv")
+                    .build());
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .contentLength(file.length())
+                    .body(resource);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
 }

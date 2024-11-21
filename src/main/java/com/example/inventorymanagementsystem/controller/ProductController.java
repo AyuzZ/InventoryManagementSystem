@@ -7,12 +7,16 @@ import com.example.inventorymanagementsystem.entity.VendorProduct;
 import com.example.inventorymanagementsystem.exceptions.ProductExistsException;
 import com.example.inventorymanagementsystem.exceptions.ProductNotFoundException;
 import com.example.inventorymanagementsystem.service.ProductService;
+import com.example.inventorymanagementsystem.service.VendorProductService;
 import com.example.inventorymanagementsystem.service.VendorService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,7 +29,7 @@ public class ProductController {
     private ProductService productService;
 
     @Autowired
-    private VendorService vendorService;
+    private VendorProductService vendorProductService;
 
 //    Create Product
     @PostMapping()
@@ -125,4 +129,82 @@ public class ProductController {
         }
         return new ResponseEntity<>("Product Details Updated.", HttpStatus.OK);
     }
+
+
+    @PostMapping(value = "import", consumes = {"multipart/form-data"})
+    public ResponseEntity<?> importProductsFromCSV(@RequestParam("file") MultipartFile file) {
+
+        if (file.isEmpty()) {
+            return new ResponseEntity<>("File is empty. Please upload a valid CSV file.", HttpStatus.BAD_REQUEST);
+        }
+
+        try {
+            productService.importFromCSV(file);
+            return new ResponseEntity<>("Products imported successfully.", HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error importing products: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/export")
+    public ResponseEntity<Resource> exportProductsToCSV() {
+        try {
+            String filePath = productService.exportToCSV();
+            File file = new File(filePath);
+            Resource resource = new FileSystemResource(file);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.parseMediaType("text/csv"));
+            headers.setContentDisposition(ContentDisposition.builder("attachment")
+                    .filename("products.csv")
+                    .build());
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .contentLength(file.length())
+                    .body(resource);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+
+    //VendorProduct
+    @PostMapping(value = "vendor/import", consumes = {"multipart/form-data"})
+    public ResponseEntity<?> importVendorProductsFromCSV(@RequestParam("file") MultipartFile file) {
+
+        if (file.isEmpty()) {
+            return new ResponseEntity<>("File is empty. Please upload a valid CSV file.", HttpStatus.BAD_REQUEST);
+        }
+
+        try {
+            vendorProductService.importFromCSV(file);
+            return new ResponseEntity<>("Products imported successfully.", HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error importing products: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("vendor/export")
+    public ResponseEntity<Resource> exportVendorProductsToCSV() {
+        try {
+            String filePath = vendorProductService.exportToCSV();
+            File file = new File(filePath);
+            Resource resource = new FileSystemResource(file);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.parseMediaType("text/csv"));
+            headers.setContentDisposition(ContentDisposition.builder("attachment")
+                    .filename("products.csv")
+                    .build());
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .contentLength(file.length())
+                    .body(resource);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
 }

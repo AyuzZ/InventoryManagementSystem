@@ -2,16 +2,26 @@ package com.example.inventorymanagementsystem.service.impl;
 
 import com.example.inventorymanagementsystem.dto.PurchaseOrderRequestDTO;
 import com.example.inventorymanagementsystem.dto.UpdateOrderStatusDTO;
+import com.example.inventorymanagementsystem.entity.Product;
 import com.example.inventorymanagementsystem.entity.PurchaseOrder;
 import com.example.inventorymanagementsystem.entity.VendorProduct;
+import com.example.inventorymanagementsystem.exceptions.EmptyCSVFileException;
 import com.example.inventorymanagementsystem.exceptions.OrderNotFoundException;
+import com.example.inventorymanagementsystem.exceptions.ProductExistsException;
+import com.example.inventorymanagementsystem.exceptions.PurchaseOrderExistsException;
 import com.example.inventorymanagementsystem.repository.PurchaseOrderRepository;
 import com.example.inventorymanagementsystem.service.PurchaseOrderService;
 import com.example.inventorymanagementsystem.service.VendorProductService;
+import com.opencsv.CSVWriter;
+import com.opencsv.bean.CsvToBean;
+import com.opencsv.bean.CsvToBeanBuilder;
+import com.opencsv.bean.HeaderColumnNameMappingStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.*;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -100,6 +110,69 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
                 (existingVendorProduct.getStockQuantity() + purchaseOrder.getOrderQuantity());
 
         vendorProductService.saveVendorProduct(existingVendorProduct);
+    }
+
+    @Override
+    public void importFromCSV(MultipartFile file) {
+        if (file.isEmpty()) {
+            throw new EmptyCSVFileException("CSV file is empty.");
+        }
+
+        try (Reader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
+            HeaderColumnNameMappingStrategy<PurchaseOrder> strategy = new HeaderColumnNameMappingStrategy<>();
+            strategy.setType(PurchaseOrder.class);
+
+            CsvToBean<PurchaseOrder> csvToBean = new CsvToBeanBuilder<PurchaseOrder>(reader)
+                    .withMappingStrategy(strategy)
+                    .withIgnoreLeadingWhiteSpace(true)
+                    .withIgnoreEmptyLine(true)
+                    .build();
+
+            List<PurchaseOrder> purchaseOrders = csvToBean.parse();
+
+            purchaseOrders.forEach(purchaseOrder -> {
+                try {
+                    purchaseOrderRepository.save(purchaseOrder);
+                } catch (PurchaseOrderExistsException e) {
+                    throw new RuntimeException("Error processing CSV data: " + e.getMessage(), e);
+                }
+            });
+
+        } catch (IOException e) {
+            throw new RuntimeException("Error reading CSV file: " + e.getMessage(), e);
+        } catch (RuntimeException e) {
+            throw new RuntimeException("Error processing CSV data: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public String exportToCSV() {
+        List<PurchaseOrder> purchaseOrderList = purchaseOrderRepository.findAll();
+        String filePath = "purchaseOrders.csv";
+
+        try(CSVWriter writer = new CSVWriter(new FileWriter(filePath))) {
+
+            String[] header = {"Id", "OrderDate", "OrderTotal", "OrderQuantity",
+                    "OrderStatus", "UnitPrice", "Product ID", "Vendor ID"};
+            writer.writeNext(header);
+
+            for(PurchaseOrder purchaseOrder : purchaseOrderList) {
+                String[] data = { String.valueOf(purchaseOrder.getOid()),
+                        String.valueOf(purchaseOrder.getOrderDate()),
+                        String.valueOf(purchaseOrder.getOrderTotal()),
+                        String.valueOf(purchaseOrder.getOrderQuantity()),
+                        String.valueOf(purchaseOrder.getOrderStatus()),
+                        String.valueOf(purchaseOrder.getUnitPrice()),
+                        String.valueOf(purchaseOrder.getProduct().getPid()),
+                        String.valueOf(purchaseOrder.getVendor().getVid())
+                };
+                writer.writeNext(data);
+            }
+
+        } catch (Exception ex) {
+            throw new RuntimeException("Error :" + ex.getMessage(), ex);
+        }
+        return filePath;
     }
 
 }

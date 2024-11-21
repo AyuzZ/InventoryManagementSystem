@@ -11,10 +11,13 @@ import com.example.inventorymanagementsystem.exceptions.VendorExistsException;
 import com.example.inventorymanagementsystem.exceptions.VendorNotFoundException;
 import com.example.inventorymanagementsystem.service.VendorService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -139,6 +142,43 @@ public class VendorController {
             return new ResponseEntity<>("Vendor Details Update Failed. Because of: " + e.getMessage(), HttpStatus.BAD_REQUEST);
         }
         return new ResponseEntity<>("Vendor Details Updated.", HttpStatus.OK);
+    }
+
+    @PostMapping(value = "import", consumes = {"multipart/form-data"})
+    public ResponseEntity<?> importVendorsFromCSV(@RequestParam("file") MultipartFile file) {
+
+        if (file.isEmpty()) {
+            return new ResponseEntity<>("File is empty. Please upload a valid CSV file.", HttpStatus.BAD_REQUEST);
+        }
+
+        try {
+            vendorService.importFromCSV(file);
+            return new ResponseEntity<>("Products imported successfully.", HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error importing products: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/export")
+    public ResponseEntity<Resource> exportVendorsToCSV() {
+        try {
+            String filePath = vendorService.exportToCSV();
+            File file = new File(filePath);
+            Resource resource = new FileSystemResource(file);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.parseMediaType("text/csv"));
+            headers.setContentDisposition(ContentDisposition.builder("attachment")
+                    .filename("vendors.csv")
+                    .build());
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .contentLength(file.length())
+                    .body(resource);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
 }
