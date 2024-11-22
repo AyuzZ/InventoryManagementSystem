@@ -1,5 +1,6 @@
 package com.example.inventorymanagementsystem.service.impl;
 
+import com.example.inventorymanagementsystem.dto.VendorCSVRepresentation;
 import com.example.inventorymanagementsystem.entity.Vendor;
 import com.example.inventorymanagementsystem.exceptions.EmptyCSVFileException;
 import com.example.inventorymanagementsystem.exceptions.VendorExistsException;
@@ -17,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.*;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class VendorServiceImpl implements VendorService {
@@ -89,16 +91,23 @@ public class VendorServiceImpl implements VendorService {
         }
 
         try (Reader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
-            HeaderColumnNameMappingStrategy<Vendor> strategy = new HeaderColumnNameMappingStrategy<>();
-            strategy.setType(Vendor.class);
+            HeaderColumnNameMappingStrategy<VendorCSVRepresentation> strategy = new HeaderColumnNameMappingStrategy<>();
+            strategy.setType(VendorCSVRepresentation.class);
 
-            CsvToBean<Vendor> csvToBean = new CsvToBeanBuilder<Vendor>(reader)
+            CsvToBean<VendorCSVRepresentation> csvToBean = new CsvToBeanBuilder<VendorCSVRepresentation>(reader)
                     .withMappingStrategy(strategy)
                     .withIgnoreLeadingWhiteSpace(true)
                     .withIgnoreEmptyLine(true)
                     .build();
 
-            List<Vendor> vendors = csvToBean.parse();
+            List<Vendor> vendors = csvToBean.parse()
+                    .stream()
+                    .map(csvLine -> Vendor.builder()
+                            .name(csvLine.getName())
+                            .contact(csvLine.getContact())
+                            .build()
+                    )
+                    .collect(Collectors.toList());
 
             vendors.forEach(vendor -> {
                 try {

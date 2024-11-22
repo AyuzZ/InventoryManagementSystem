@@ -1,5 +1,8 @@
 package com.example.inventorymanagementsystem.service.impl;
 
+import com.example.inventorymanagementsystem.dto.VendorProductCSVRepresentation;
+import com.example.inventorymanagementsystem.entity.Product;
+import com.example.inventorymanagementsystem.entity.Vendor;
 import com.example.inventorymanagementsystem.entity.VendorProduct;
 import com.example.inventorymanagementsystem.exceptions.EmptyCSVFileException;
 import com.example.inventorymanagementsystem.exceptions.VendorProductExistsException;
@@ -16,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.*;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class VendorProductServiceImpl implements VendorProductService {
@@ -41,20 +45,40 @@ public class VendorProductServiceImpl implements VendorProductService {
         }
 
         try (Reader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
-            HeaderColumnNameMappingStrategy<VendorProduct> strategy = new HeaderColumnNameMappingStrategy<>();
-            strategy.setType(VendorProduct.class);
+            HeaderColumnNameMappingStrategy<VendorProductCSVRepresentation> strategy = new HeaderColumnNameMappingStrategy<>();
+            strategy.setType(VendorProductCSVRepresentation.class);
 
-            CsvToBean<VendorProduct> csvToBean = new CsvToBeanBuilder<VendorProduct>(reader)
+            CsvToBean<VendorProductCSVRepresentation> csvToBean = new CsvToBeanBuilder<VendorProductCSVRepresentation>(reader)
                     .withMappingStrategy(strategy)
                     .withIgnoreLeadingWhiteSpace(true)
                     .withIgnoreEmptyLine(true)
                     .build();
 
-            List<VendorProduct> vendorProductList = csvToBean.parse();
+            List<VendorProduct> vendorProductList = csvToBean.parse()
+                    .stream()
+                    .map(csvLine -> VendorProduct.builder()
+                            .product(Product.builder().pid(csvLine.getPid()).build())
+                            .vendor(Vendor.builder().vid(csvLine.getVid()).build())
+                            .stockQuantity(csvLine.getStockQuantity())
+                            .unitPrice(csvLine.getUnitPrice())
+                            .build()
+                    ).collect(Collectors.toList());
+
 
             vendorProductList.forEach(vendorProduct -> {
                 try {
-                    vendorProductRepository.save(vendorProduct);
+                    Optional<VendorProduct> existingRecord = vendorProductRepository.getVendorProductByVidAndPidAndPrice(
+                            vendorProduct.getVendor().getVid(),
+                            vendorProduct.getProduct().getPid(),
+                            vendorProduct.getUnitPrice());
+                    if (existingRecord.isPresent()) {
+                        VendorProduct existingRecordDB = existingRecord.get();
+                        existingRecordDB.setStockQuantity(
+                                existingRecordDB.getStockQuantity() + vendorProduct.getStockQuantity());
+                        vendorProductRepository.save(existingRecordDB);
+                    }else {
+                        vendorProductRepository.save(vendorProduct);
+                    }
                 } catch (VendorProductExistsException e) {
                     throw new RuntimeException("Error processing CSV data: " + e.getMessage(), e);
                 }

@@ -147,20 +147,20 @@ public class PurchaseOrderController {
         return new ResponseEntity<>("Order Delivered! Corresponding record in Vendor_Product Table has also been updated.", HttpStatus.CREATED);
     }
 
-    @PostMapping(value = "import", consumes = {"multipart/form-data"})
-    public ResponseEntity<?> importOrdersFromCSV(@RequestPart("file") MultipartFile file) {
-
-        if (file.isEmpty()) {
-            return new ResponseEntity<>("File is empty. Please upload a valid CSV file.", HttpStatus.BAD_REQUEST);
-        }
-
-        try {
-            purchaseOrderService.importFromCSV(file);
-            return new ResponseEntity<>("Products imported successfully.", HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>("Error importing products: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
+//    @PostMapping(value = "import", consumes = {"multipart/form-data"})
+//    public ResponseEntity<?> importOrdersFromCSV(@RequestPart("file") MultipartFile file) {
+//
+//        if (file.isEmpty()) {
+//            return new ResponseEntity<>("File is empty. Please upload a valid CSV file.", HttpStatus.BAD_REQUEST);
+//        }
+//
+//        try {
+//            purchaseOrderService.importFromCSV(file);
+//            return new ResponseEntity<>("Products imported successfully.", HttpStatus.OK);
+//        } catch (Exception e) {
+//            return new ResponseEntity<>("Error importing products: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+//        }
+//    }
 
     @GetMapping("/export")
     public ResponseEntity<Resource> exportOrdersToCSV() {

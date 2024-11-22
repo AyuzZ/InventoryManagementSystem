@@ -1,7 +1,10 @@
 package com.example.inventorymanagementsystem.service.impl;
 
+import com.example.inventorymanagementsystem.dto.OrderCSVRepresentation;
 import com.example.inventorymanagementsystem.dto.PurchaseOrderRequestDTO;
+import com.example.inventorymanagementsystem.entity.Product;
 import com.example.inventorymanagementsystem.entity.PurchaseOrder;
+import com.example.inventorymanagementsystem.entity.Vendor;
 import com.example.inventorymanagementsystem.entity.VendorProduct;
 import com.example.inventorymanagementsystem.exceptions.EmptyCSVFileException;
 import com.example.inventorymanagementsystem.exceptions.OrderNotFoundException;
@@ -22,6 +25,7 @@ import java.io.*;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class PurchaseOrderServiceImpl implements PurchaseOrderService {
@@ -108,41 +112,53 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         vendorProductService.saveVendorProduct(existingVendorProduct);
     }
 
-    @Override
-    public void importFromCSV(MultipartFile file) {
-        if (file.isEmpty()) {
-            throw new EmptyCSVFileException("CSV file is empty.");
-        }
-
-        try (Reader reader = new BufferedReader(
-                new InputStreamReader(file.getInputStream()))) {
-
-            HeaderColumnNameMappingStrategy<PurchaseOrder> strategy =
-                    new HeaderColumnNameMappingStrategy<>();
-            strategy.setType(PurchaseOrder.class);
-
-            CsvToBean<PurchaseOrder> csvToBean = new CsvToBeanBuilder<PurchaseOrder>(reader)
-                    .withMappingStrategy(strategy)
-                    .withIgnoreLeadingWhiteSpace(true)
-                    .withIgnoreEmptyLine(true)
-                    .build();
-
-            List<PurchaseOrder> purchaseOrders = csvToBean.parse();
-
-            purchaseOrders.forEach(purchaseOrder -> {
-                try {
-                    purchaseOrderRepository.save(purchaseOrder);
-                } catch (PurchaseOrderExistsException e) {
-                    throw new RuntimeException("Error processing CSV data: " + e.getMessage(), e);
-                }
-            });
-
-        } catch (IOException e) {
-            throw new RuntimeException("Error reading CSV file: " + e.getMessage(), e);
-        } catch (RuntimeException e) {
-            throw new RuntimeException("Error processing CSV data: " + e.getMessage(), e);
-        }
-    }
+//    @Override
+//    public void importFromCSV(MultipartFile file) {
+//        if (file.isEmpty()) {
+//            throw new EmptyCSVFileException("CSV file is empty.");
+//        }
+//
+//        try (Reader reader = new BufferedReader(
+//                new InputStreamReader(file.getInputStream()))) {
+//
+//            HeaderColumnNameMappingStrategy<OrderCSVRepresentation> strategy =
+//                    new HeaderColumnNameMappingStrategy<>();
+//            strategy.setType(OrderCSVRepresentation.class);
+//
+//            CsvToBean<OrderCSVRepresentation> csvToBean = new CsvToBeanBuilder<OrderCSVRepresentation>(reader)
+//                    .withMappingStrategy(strategy)
+//                    .withIgnoreLeadingWhiteSpace(true)
+//                    .withIgnoreEmptyLine(true)
+//                    .build();
+//
+//            List<PurchaseOrder> purchaseOrders = csvToBean.parse()
+//                    .stream()
+//                    .map(csvLine -> PurchaseOrder.builder()
+//                                .product(Product.builder().pid(csvLine.getPid()).build())
+//                                .vendor(Vendor.builder().vid(csvLine.getVid()).build())
+//                                .orderDate(csvLine.getOrderDate())
+//                                .orderQuantity(csvLine.getOrderQuantity())
+//                                .orderStatus(csvLine.getOrderStatus())
+//                                .orderTotal(csvLine.getOrderTotal())
+//                                .unitPrice(csvLine.getUnitPrice())
+//                                .build()
+//                    )
+//                    .collect(Collectors.toList());
+//
+//            purchaseOrders.forEach(purchaseOrder -> {
+//                try {
+//                    purchaseOrderRepository.save(purchaseOrder);
+//                } catch (PurchaseOrderExistsException e) {
+//                    throw new RuntimeException("Error processing CSV data: " + e.getMessage(), e);
+//                }
+//            });
+//
+//        } catch (IOException e) {
+//            throw new RuntimeException("Error reading CSV file: " + e.getMessage(), e);
+//        } catch (RuntimeException e) {
+//            throw new RuntimeException("Error processing CSV data: " + e.getMessage(), e);
+//        }
+//    }
 
     @Override
     public String exportToCSV() {

@@ -6,10 +6,10 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class ProductCSVRepresentation {
+public class VendorCSVRepresentation {
 
     @CsvBindByName(column = "Name")
     private String name;
-    @CsvBindByName(column = "Description")
-    private String description;
+    @CsvBindByName(column = "Contact")
+    private String contact;
 }

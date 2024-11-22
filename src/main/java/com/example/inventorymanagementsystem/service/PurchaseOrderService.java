@@ -16,7 +16,7 @@ public interface PurchaseOrderService {
 
     void updateOrderStatus(PurchaseOrder purchaseOrder);
 
-    void importFromCSV(MultipartFile file);
+//    void importFromCSV(MultipartFile file);
 
     String exportToCSV();
 
